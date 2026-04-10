@@ -205,3 +205,18 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Environment
+.env
+*.env
+
+# Data files (CSVs can be large — don't commit raw data)
+data/raw/
+data/cleaned/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# VS Code
+.vscode/
