@@ -48,5 +48,35 @@ print("\nAfter melting to long format:")
 print("ZHVI rows:", len(zhvi_long))
 print("ZORI rows:", len(zori_long))
 
-#Cleaning up columns
+# Cleaning up columns
+
+# convert date columns to datetime
+zhvi_long["date"] = pd.to_datetime(zhvi_long["date"])
+zori_long["date"] = pd.to_datetime(zori_long["date"])   
+
+# Round values to 2 decimal places for simplicity
+zhvi_long["median_home_value"] = zhvi_long["median_home_value"].round(2)
+zori_long["median_rent"] = zori_long["median_rent"].round(2)
+
+# Standardize city name columns
+zhvi_long = zhvi_long.rename(columns={"RegionName": "city" , "StateName": "state"})
+zori_long = zori_long.rename(columns={"RegionName": "city" , "StateName": "state"})
+
+# Align Date ranges (trim ZHVI down to 2015 onward to match ZORI)
+
+zhvi_long = zhvi_long[zhvi_long["date"] >= "2015-01-01"]
+
+print("\nAfter cleaning and aligning date ranges:")
+print("ZHVI rows:", len(zhvi_long))
+print("ZORI rows:", len(zori_long))
+
+# drop rows with missing values
+zhvi_before = len(zhvi_long)
+zori_before = len(zori_long)
+
+zhvi_long = zhvi_long.dropna(subset=["median_home_value"])
+zori_long = zori_long.dropna(subset=["median_rent"])
+
+print(f"\nZHVI rows dropped due to missing values: {zhvi_before - len(zhvi_long)}")
+print(f"ZORI rows dropped due to missing values: {zori_before - len(zori_long)}")
 
