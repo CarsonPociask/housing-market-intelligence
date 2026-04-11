@@ -80,3 +80,17 @@ zori_long = zori_long.dropna(subset=["median_rent"])
 print(f"\nZHVI rows dropped due to missing values: {zhvi_before - len(zhvi_long)}")
 print(f"ZORI rows dropped due to missing values: {zori_before - len(zori_long)}")
 
+# sort and saving cleaned data
+
+zhvi_long = zhvi_long.sort_values(["city", "date"]).reset_index(drop = True)
+zori_long = zori_long.sort_values(["city", "date"]).reset_index(drop = True)
+
+zhvi_long.to_csv(f"{CLEAN_DIR}/zhvi_clean.csv", index = False)
+zori_long.to_csv(f"{CLEAN_DIR}/zori_clean.csv", index = False)
+
+print("\n Cleaned files and saved to data/cleaned/")
+print("ZHVI final shape:", zhvi_long.shape)
+print("ZORI final shape:", zori_long.shape)
+print(zhvi_long.head(3).to_string())
+print("\n Sample ZORI rows:")
+print(zori_long.head(3).to_string())
