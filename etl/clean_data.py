@@ -136,3 +136,28 @@ census_data = pd.concat(census_frames, ignore_index = True)
 print("\nCombined Census data shape:", census_data.shape)
 
 # Clean up census data
+
+census = census_data
+
+# Strip " Metro Area" and " Metropolitan Statistical Area" from city names
+census["city"] = census["city"].str.replace(" Metro Area", "", regex=False)
+census["city"] = census["city"].str.replace(" Metropolitan Statistical Area", "", regex=False)
+
+# Drop rows where income is missing or non-numeric
+# Census uses '-', 'N', '**' etc. for suppressed/unavailable data
+census = census[pd.to_numeric(census["median_household_income"], errors="coerce").notna()]
+census["median_household_income"] = census["median_household_income"].astype(float).round(2)
+
+# Drop the GEO_ID column as it's not needed for our analysis and is just a unique identifier
+census = census.drop(columns=["geo_id"])
+
+# Sort by city and year for easier analysis later
+census = census.sort_values(["city", "year"]).reset_index(drop=True)
+
+print(f"Census rows after cleaning: {len(census)}")
+print("\nSample Census rows:")
+print(census.head(5).to_string())
+
+# Save cleaned census data to one clean CSV
+census.to_csv(f"{CLEAN_DIR}/census_income_clean.csv", index=False)
+print("\n Census income saved to data/cleaned/census_income_clean.csv")
