@@ -109,10 +109,30 @@ census_frames = []
 for filepath in census_files:
     # Extract the year from the filename (assuming format like "ACSST5Y2015.S1901-Data.csv")
     filename = os.path.basename(filepath)
-    year = int(filename[9:13])
+    year = int(filename[8:11])
 
     # Read the CSV file and skip the second row 
-    df = pd.read_csv(filepath, header = 0, skiprows=1, dtype = str)
+    df = pd.read_csv(filepath, header = 0,  dtype = str)
 
     # keep only the columns we need, and rename them
-    
+    #  S1901_C01_012E = median household income estimate
+    keep_cols = ["GEO_ID", "NAME", "S1901_C01_012E"]
+    df = df[keep_cols]
+
+    df = df.rename(columns={
+        'GEO_ID': "geo_id",
+        "NAME": "city",
+        "S1901_C01_012E": "median_household_income"
+    })
+
+    # Add a year column
+    df["year"] = year
+
+    census_frames.append(df)
+
+# Combine all years into a single DataFrame
+census_data = pd.concat(census_frames, ignore_index = True)
+
+print("\nCombined Census data shape:", census_data.shape)
+
+# Clean up census data
