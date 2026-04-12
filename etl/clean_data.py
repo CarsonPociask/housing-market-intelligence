@@ -94,3 +94,25 @@ print("ZORI final shape:", zori_long.shape)
 print(zhvi_long.head(3).to_string())
 print("\n Sample ZORI rows:")
 print(zori_long.head(3).to_string())
+
+# Census data cleaning
+
+import glob
+
+# find all data CSV files
+census_dir = f"{RAW_DIR}/census"
+census_files = glob.glob(f"{census_dir}/*-Data.csv")
+print(f"\nFound {len(census_files)} Census data files")
+
+census_frames = []
+
+for filepath in census_files:
+    # Extract the year from the filename (assuming format like "ACSST5Y2015.S1901-Data.csv")
+    filename = os.path.basename(filepath)
+    year = int(filename[9:13])
+
+    # Read the CSV file and skip the second row 
+    df = pd.read_csv(filepath, header = 0, skiprows=1, dtype = str)
+
+    # keep only the columns we need, and rename them
+    
