@@ -50,7 +50,7 @@ housing-market-intelligence/
 │
 ├── data/
 │   ├── raw/          # Original downloaded CSVs (Zillow, Census, FRED)
-│   └── cleaned/      # Python-processed CSVs ready for DB load
+│   └── clean/      # Python-processed CSVs ready for DB load
 │
 ├── database/         # DDL scripts — CREATE TABLE definitions
 ├── queries/          # Analytical SQL query library (10+ queries)
