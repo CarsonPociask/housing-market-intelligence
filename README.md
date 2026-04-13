@@ -19,12 +19,12 @@ The platform is built to answer questions like:
 
 ## Project Status
 
-🟡 **In Development — Phase 1 (Data Acquisition & Cleaning)**
+🟡 **In Development — Phase 2 ~ Working on MySQL database build & ETL**
 
 | Phase | Description | Status |
 |-------|-------------|--------|
-| 1 | Data acquisition & cleaning | 🔄 In Progress |
-| 2 | MySQL database build & ETL | ⬜ Not Started |
+| 1 | Data acquisition & cleaning | ✅ Complete |
+| 2 | MySQL database build & ETL | 🔄 In Progress |
 | 3 | SQL query development | ⬜ Not Started |
 | 4 | Streamlit dashboard | ⬜ Not Started |
 
