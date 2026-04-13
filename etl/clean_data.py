@@ -109,7 +109,7 @@ census_frames = []
 for filepath in census_files:
     # Extract the year from the filename (assuming format like "ACSST5Y2015.S1901-Data.csv")
     filename = os.path.basename(filepath)
-    year = int(filename[8:11])
+    year = int(filename[7:11])
 
     # Read the CSV file and skip the second row 
     df = pd.read_csv(filepath, header = 0,  dtype = str)
@@ -145,7 +145,7 @@ census["city"] = census["city"].str.replace(" Metropolitan Statistical Area", ""
 
 # Drop rows where income is missing or non-numeric
 # Census uses '-', 'N', '**' etc. for suppressed/unavailable data
-census = census[pd.to_numeric(census["median_household_income"], errors="coerce").notna()]
+census = census[pd.to_numeric(census["median_household_income"], errors="coerce").notna()].copy()
 census["median_household_income"] = census["median_household_income"].astype(float).round(2)
 
 # Drop the GEO_ID column as it's not needed for our analysis and is just a unique identifier
