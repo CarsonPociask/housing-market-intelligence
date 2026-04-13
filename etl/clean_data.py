@@ -161,3 +161,28 @@ print(census.head(5).to_string())
 # Save cleaned census data to one clean CSV
 census.to_csv(f"{CLEAN_DIR}/census_income_clean.csv", index=False)
 print("\n Census income saved to data/cleaned/census_income_clean.csv")
+
+# Now to clean FRED mortgage rate data and save to clean directory (cleanest and easiest of the datasets)
+
+fred_raw = pd.read_csv(f"{RAW_DIR}/fred_mortgage.csv")
+
+# Rename columns
+fred = fred_raw.rename(columns={
+    "observation_date": "date",
+    "MORTGAGE30US": "mortgage_rate_30yr"
+})
+
+# Convert date to datetime, filter for after 2015-01-01, drop missing values, round to two decimal places, and sort
+
+fred["date"] = pd.to_datetime(fred["date"])
+fred = fred[fred["date"] >= "2015-01-01"].sort_values("date").reset_index(drop=True).copy()
+fred = fred.dropna(subset=["mortgage_rate_30yr"])
+fred["mortgage_rate_30yr"] = fred["mortgage_rate_30yr"].round(2)
+
+# Save cleaned FRED data
+fred.to_csv(f"{CLEAN_DIR}/fred_mortgage_clean.csv", index=False)
+
+print(f"FRED rows after cleaning: {len(fred)}")
+print("\nSample FRED rows:")
+print(fred.head(5).to_string())
+print("\nFRED mortgage rate saved to data/cleaned/fred_mortgage_clean.csv")
