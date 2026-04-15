@@ -210,7 +210,7 @@ __marimo__/
 .env
 *.env
 
-# Data files (CSVs can be large — don't commit raw data)
+# Data files 
 data/raw/
 data/cleaned/
 
