@@ -7,7 +7,7 @@ import os
 conn = mysql.connector.connect(
     host = "localhost",
     user = "root",
-    password = "Passoword here", #replace with your actual password and actual mysql user
+    password = "Password here", #replace with your actual password and actual mysql user
     database = "housing_intelligence"
 )
 
@@ -60,4 +60,34 @@ print(f"City lookup built: {len(city_lookup)} entries")
 
 # Load the home_prices table 
 
+home_prices_data = []
+for _, row in zhvi.iterrows():
+    city_id = city_lookup.get((row["city"], row["state"]))
+    if city_id is None:
+        continue
+    home_prices_data.append((
+        city_id,
+        row["date"],
+        row["median_home_value"]
+    ))
 
+
+print(f"\nHome prices rows to insert: {len(home_prices_data)}")
+
+# Insert home prices data in batches as there are many rows
+
+batch_size = 1000
+for i in range(0, len(home_prices_data), batch_size):
+    batch = home_prices_data[i:i + batch_size]
+    cursor.executemany("""
+        INSERT IGNORE INTO home_prices (city_id, date, median_home_value)
+        VALUES (%s, %s, %s)
+    """, batch)
+    conn.commit()
+
+cursor.execute("SELECT COUNT(*) FROM home_prices")
+count = cursor.fetchone()[0]
+print(f"Home prices loaded: {count} rows in database")
+
+cursor.close()
+conn.close()
