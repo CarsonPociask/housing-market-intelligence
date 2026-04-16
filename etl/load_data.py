@@ -7,7 +7,7 @@ import os
 conn = mysql.connector.connect(
     host = "localhost",
     user = "root",
-    password = "Password here", #replace with your actual password and actual mysql user
+    password = "Password_here", #replace with your actual password and actual mysql user
     database = "housing_intelligence"
 )
 
@@ -88,6 +88,58 @@ for i in range(0, len(home_prices_data), batch_size):
 cursor.execute("SELECT COUNT(*) FROM home_prices")
 count = cursor.fetchone()[0]
 print(f"Home prices loaded: {count} rows in database")
+
+# Load the rental_prices table
+
+rent_prices_data = []
+
+for _, row in zori.iterrows():
+    city_id = city_lookup.get((row["city"], row["state"]))
+    if city_id is None:
+        continue
+    rent_prices_data.append((
+        city_id,
+        row["date"],
+        row["median_rent"]
+    ))
+
+print(f"\nRent prices rows to insert: {len(rent_prices_data)}")
+
+for i in range(0, len(rent_prices_data), batch_size):
+    batch = rent_prices_data[i:i + batch_size]
+    cursor.executemany("""
+        INSERT IGNORE INTO rent_prices (city_id, date, median_rent)
+        VALUES (%s, %s, %s)
+    """, batch)
+    conn.commit()
+
+cursor.execute("SELECT COUNT(*) FROM rent_prices")
+count = cursor.fetchone()[0]
+print(f"Rent prices loaded: {count} rows in database")
+
+# Load interest rates data
+
+interest_rates_data = []
+
+for _, row in fred.iterrows():
+    interest_rates_data.append((
+        row["date"],
+        row["mortgage_rate_30yr"]
+    ))
+
+print(f"\nInterest rate rows to insert: {len(interest_rates_data)}")
+
+for i in range(0, len(interest_rates_data), batch_size):
+    batch = interest_rates_data[i:i + batch_size]
+    cursor.executemany("""
+        INSERT IGNORE INTO interest_rates (date, mortgage_rate_30yr)
+        VALUES (%s, %s)
+    """, batch)
+    conn.commit()
+
+cursor.execute("SELECT COUNT(*) FROM interest_rates")
+count = cursor.fetchone()[0]
+print(f"Interest rates loaded: {count} rows in database")
 
 cursor.close()
 conn.close()
