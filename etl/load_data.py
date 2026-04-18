@@ -7,7 +7,7 @@ import os
 conn = mysql.connector.connect(
     host = "localhost",
     user = "root",
-    password = "Password_here", #replace with your actual password and actual mysql user
+    password = "Password Here", #replace with your actual password and actual mysql user
     database = "housing_intelligence"
 )
 
@@ -140,6 +140,43 @@ for i in range(0, len(interest_rates_data), batch_size):
 cursor.execute("SELECT COUNT(*) FROM interest_rates")
 count = cursor.fetchone()[0]
 print(f"Interest rates loaded: {count} rows in database")
+
+# Load income data 
+income_data = []
+skipped = 0
+for _, row in census.iterrows():
+    # Census city names don't include state, so we need to find the city_id by matching just on city name
+    city_name = row["city"]
+    # We have to extract state from city name in census data, which is in format "Abilene, TX" — state is the last 2 chars after ","
+    if "," in city_name:
+        state = city_name.split(",")[-1].strip()
+    else: 
+        skipped += 1
+        continue
+    city_id = city_lookup.get((city_name, state))
+    if city_id is None:
+        skipped += 1
+        continue
+    income_data.append((
+        city_id,
+        int(row["year"]),
+        row["median_household_income"]
+    ))
+
+print(f"\nIncome rows to insert: {len(income_data)}")
+print(f"Rows skipped: {skipped}")
+
+for i in range(0, len(income_data), batch_size):
+    batch = income_data[i:i + batch_size]
+    cursor.executemany("""
+        INSERT IGNORE INTO income_levels (city_id, year, median_household_income)
+        VALUES (%s, %s, %s)
+    """, batch)
+    conn.commit()
+
+cursor.execute("SELECT COUNT(*) FROM income_levels")
+count = cursor.fetchone()[0]
+print(f"Income levels loaded: {count} rows in database")
 
 cursor.close()
 conn.close()
