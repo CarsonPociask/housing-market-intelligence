@@ -7,7 +7,7 @@ import os
 conn = mysql.connector.connect(
     host = "localhost",
     user = "root",
-    password = "236404CPpuffin*", #replace with your actual password and actual mysql user
+    password = "Password Here", #replace with your actual password and actual mysql user
     database = "housing_intelligence"
 )
 
@@ -141,22 +141,42 @@ cursor.execute("SELECT COUNT(*) FROM interest_rates")
 count = cursor.fetchone()[0]
 print(f"Interest rates loaded: {count} rows in database")
 
-# Load income data 
+# Load income data - we will have to make sure to account for the fact that the census data uses more specific city names so to do that we will use only the first part of the city name before any hyphens.
+
+def get_city_id_from_census(city_name, city_lookup):
+    """
+    Census uses long MSA names like 'Atlanta-Sandy Springs-Alpharetta, GA'
+    Zillow uses short names like 'Atlanta, GA'
+    """
+    if ", " not in city_name:
+        return None
+
+    # Extract state — handle multi-state metros like "Allentown-Bethlehem-Easton, PA-NJ"
+    state_part = city_name.split(", ")[-1].strip()
+    primary_state = state_part.split("-")[0].strip()
+
+    # Extract first city before any hyphens
+    city_part = city_name.split(", ")[0].strip()
+    primary_city = city_part.split("-")[0].strip()
+
+    # Build the short name Zillow would use
+    short_name = f"{primary_city}, {primary_state}"
+  
+    city_id = city_lookup.get((short_name, primary_state))
+    if city_id:
+        return city_id
+
+    return None
+
 income_data = []
 skipped = 0
+
 for _, row in census.iterrows():
-    # Census city names don't include state, so we need to find the city_id by matching just on city name
-    city_name = row["city"]
-    # We have to extract state from city name in census data, which is in format "Abilene, TX" — state is the last 2 chars after ","
-    if "," in city_name:
-        state = city_name.split(",")[-1].strip()
-    else: 
-        skipped += 1
-        continue
-    city_id = city_lookup.get((city_name, state))
+    city_id = get_city_id_from_census(row["city"], city_lookup)
     if city_id is None:
         skipped += 1
         continue
+
     income_data.append((
         city_id,
         int(row["year"]),
@@ -164,23 +184,8 @@ for _, row in census.iterrows():
     ))
 
 print(f"\nIncome rows to insert: {len(income_data)}")
-print(f"Rows skipped: {skipped}")
+print(f"Rows skipped (no city match): {skipped}")
 
-# DEBUG - find unmatched census cities
-unmatched = []
-for _, row in census.iterrows():
-    city_name = row["city"]
-    if ", " in city_name:
-        state = city_name.split(", ")[-1].strip()
-        city_id = city_lookup.get((city_name, state))
-        if city_id is None:
-            unmatched.append(city_name)
-
-unmatched_unique = sorted(set(unmatched))
-print(f"\nSample unmatched Census cities (first 20):")
-for c in unmatched_unique[:20]:
-    print(f"  {c}")
-    
 for i in range(0, len(income_data), batch_size):
     batch = income_data[i:i + batch_size]
     cursor.executemany("""
