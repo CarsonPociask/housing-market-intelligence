@@ -7,7 +7,7 @@ import os
 conn = mysql.connector.connect(
     host = "localhost",
     user = "root",
-    password = "Password Here", #replace with your actual password and actual mysql user
+    password = "236404CPpuffin*", #replace with your actual password and actual mysql user
     database = "housing_intelligence"
 )
 
@@ -166,6 +166,21 @@ for _, row in census.iterrows():
 print(f"\nIncome rows to insert: {len(income_data)}")
 print(f"Rows skipped: {skipped}")
 
+# DEBUG - find unmatched census cities
+unmatched = []
+for _, row in census.iterrows():
+    city_name = row["city"]
+    if ", " in city_name:
+        state = city_name.split(", ")[-1].strip()
+        city_id = city_lookup.get((city_name, state))
+        if city_id is None:
+            unmatched.append(city_name)
+
+unmatched_unique = sorted(set(unmatched))
+print(f"\nSample unmatched Census cities (first 20):")
+for c in unmatched_unique[:20]:
+    print(f"  {c}")
+    
 for i in range(0, len(income_data), batch_size):
     batch = income_data[i:i + batch_size]
     cursor.executemany("""
