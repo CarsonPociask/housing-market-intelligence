@@ -1,3 +1,21 @@
+-- --------------------------------------------------------
+-- Query 10: Market Summary Ranking (Composite Score)
+-- Purpose:  Combines price-to-income ratio, rent burden,
+--           and price growth into a single market stress
+--           score per city for a given year.
+-- Weights:  Price-to-income  50%
+--           Rent-to-income   30% (normalized to 0-10 scale)
+--           Price growth YoY 20%
+-- Thresholds: > 7 = High Stress
+--             > 4 = Moderate Stress
+--             <= 4 = Affordable
+-- Note:     Score reflects conditions in the selected year.
+--           Correcting markets may score lower than their
+--           absolute price level suggests.
+-- Concepts: CTEs (WITH clauses), composite scoring,
+--           multi-CTE joins, CASE WHEN classification
+-- --------------------------------------------------------
+
 WITH affordability AS (
     SELECT
         c.city_id,
@@ -52,24 +70,24 @@ SELECT
     a.price_to_income_ratio,
     rb.rent_to_income_pct,
     pg.price_growth_yoy_pct,
-    ROUND(
-        (a.price_to_income_ratio * 0.5) +
-        (rb.rent_to_income_pct * 0.3) +
-        (pg.price_growth_yoy_pct * 0.2)
-    , 2) AS market_stress_score,
-    CASE
-        WHEN (a.price_to_income_ratio * 0.5) +
-             (rb.rent_to_income_pct * 0.3) +
-             (pg.price_growth_yoy_pct * 0.2) > 20
-        THEN 'High Stress'
-        WHEN (a.price_to_income_ratio * 0.5) +
-             (rb.rent_to_income_pct * 0.3) +
-             (pg.price_growth_yoy_pct * 0.2) > 12
-        THEN 'Moderate Stress'
-        ELSE 'Affordable'
-    END AS market_status
+   ROUND(
+    (a.price_to_income_ratio * 0.5) +
+    (rb.rent_to_income_pct / 10 * 0.3) +
+    (pg.price_growth_yoy_pct * 0.2)
+, 2) AS market_stress_score,
+CASE
+    WHEN (a.price_to_income_ratio * 0.5) +
+         (rb.rent_to_income_pct / 10 * 0.3) +
+         (pg.price_growth_yoy_pct * 0.2) > 7
+    THEN 'High Stress'
+    WHEN (a.price_to_income_ratio * 0.5) +
+         (rb.rent_to_income_pct / 10 * 0.3) +
+         (pg.price_growth_yoy_pct * 0.2) > 4
+    THEN 'Moderate Stress'
+    ELSE 'Affordable'
+END AS market_status
 FROM affordability a
 JOIN rent_burden rb ON a.city_id = rb.city_id
 JOIN price_growth pg ON a.city_id = pg.city_id
-ORDER BY market_stress_score DESC
+ORDER BY market_stress_score ASC
 LIMIT 20;
