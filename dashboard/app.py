@@ -84,7 +84,7 @@ st.markdown("""
         box-shadow: none !important;
     }
 
-    /* ── SELECTBOX / MULTISELECT — light theme ── */
+   /* ── SELECTBOX / MULTISELECT — light theme ── */
     .stSelectbox > div > div,
     .stMultiSelect > div > div {
         background-color: #FFFFFF !important;
@@ -106,6 +106,55 @@ st.markdown("""
         letter-spacing: 0.12em !important;
         text-transform: uppercase !important;
         color: #888580 !important;
+    }
+
+    /* Dropdown portal — light theme (fixes dark hover) */
+    [data-baseweb="popover"] {
+        background-color: #FFFFFF !important;
+    }
+    [data-baseweb="menu"] {
+        background-color: #FFFFFF !important;
+        border: 1px solid #E4E0DA !important;
+        border-radius: 2px !important;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08) !important;
+    }
+    [data-baseweb="menu"] li {
+        background-color: #FFFFFF !important;
+        color: #2C2C2C !important;
+        font-family: 'Source Serif 4', serif !important;
+        font-size: 13.5px !important;
+    }
+    [data-baseweb="menu"] li:hover,
+    [data-baseweb="menu"] li[aria-selected="true"] {
+        background-color: #F2F7F5 !important;
+        color: #2C2C2C !important;
+    }
+    [data-baseweb="menu"] li[aria-selected="true"] {
+        font-weight: 600 !important;
+    }
+
+    /* Multiselect tags */
+    [data-baseweb="tag"] {
+        background-color: #E8F2EE !important;
+        border: 1px solid #40826D !important;
+        border-radius: 2px !important;
+    }
+    [data-baseweb="tag"] span {
+        color: #2C2C2C !important;
+        font-family: 'Source Serif 4', serif !important;
+        font-size: 12px !important;
+    }
+    [data-baseweb="tag"] [role="presentation"] {
+        color: #40826D !important;
+    }
+
+    /* Light tooltip */
+    [data-baseweb="tooltip"],
+    .stTooltipContent {
+        background-color: #FFFFFF !important;
+        color: #2C2C2C !important;
+        border: 1px solid #E4E0DA !important;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
     }
 
     /* ── METRIC CARDS ── */
@@ -386,11 +435,13 @@ if page == "Market Overview":
 
     section("1.1", "Affordability Rankings")
 
-    f_col1, f_col2 = st.columns([2, 1])
+    f_col1, f_col2, f_col3 = st.columns([2, 1, 1])
     with f_col1:
         year = st.selectbox("Reference Year", YEAR_OPTIONS, index=0, key="ov_year")
     with f_col2:
         top_n = st.selectbox("Cities to display", [10, 20, 30], index=1, key="ov_n")
+    with f_col3:
+        sort_dir = st.selectbox("Sort Order", ["Least Affordable First", "Most Affordable First"], key="ov_sort")
 
     rankings = run_query(f"""
         SELECT c.city, c.state,
@@ -402,7 +453,7 @@ if page == "Market Overview":
         JOIN income_levels il ON c.city_id = il.city_id AND YEAR(hp.date) = il.year
         WHERE il.year = {year}
         GROUP BY c.city_id, c.city, c.state, il.median_household_income
-        ORDER BY price_to_income_ratio DESC
+        ORDER BY price_to_income_ratio {'DESC' if sort_dir == 'Least Affordable First' else 'ASC'}
         LIMIT {top_n}
     """)
 
@@ -436,7 +487,7 @@ if page == "Market Overview":
             height=max(380, top_n * 22 + 100)
         )
         fig.update_layout(
-            yaxis=dict(autorange="reversed", automargin=True),
+            yaxis=dict(autorange="reversed" if sort_dir == "Least Affordable First" else True, automargin=True),
             margin=dict(l=180, r=24, t=56, b=40),
         )
         st.plotly_chart(fig, use_container_width=True)
@@ -887,9 +938,13 @@ elif page == "Speculation Index":
 
     section("4.1", "Speculation Index Rankings")
     if not spec.empty:
+        s_max = spec["speculation_index"].max()
+        s_p75 = spec["speculation_index"].quantile(0.75)
+        s_p40 = spec["speculation_index"].quantile(0.40)
+
         def spec_color(v):
-            if v > 15:   return C["secondary"]
-            elif v > 5:  return C["amber"]
+            if v >= s_p75:   return C["secondary"]
+            elif v >= s_p40:  return C["amber"]
             elif v >= 0: return C["p_light"]
             else:        return C["primary"]
 
@@ -918,7 +973,12 @@ elif page == "Speculation Index":
         )
         fig.update_layout(
             yaxis=dict(autorange="reversed", automargin=True),
-            margin=dict(l=180, r=24, t=56, b=40),
+            margin=dict(l=180, r=24, t=56, b=40), 
+            hoverlabel=dict(
+                bgcolor=C["white"],
+                bordercolor=C["light"],
+                font=dict(family=FONT, size=12, color=C["dark"]),
+        ),
         )
         st.plotly_chart(fig, use_container_width=True)
 
