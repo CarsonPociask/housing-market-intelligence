@@ -213,7 +213,7 @@ streamlit run app.py
 A few findings that emerged from the data:
  
 - **Kahului, HI** holds the highest price-to-income ratio in the dataset at 10.64x in 2023 — meaning the median home costs over a decade of the median household's gross income. Likely due to out of state tourists leading to inreased demand than what would be suistained by the true local population.
-- **Florida dominates rent burden rankings** — 9 of the top 20 most rent-burdened metros in 2023 are in Florida, led by Miami at 41.98% rent-to-income. Likely due to simmilar reasons as hawaii, many people like to vacation in florida leading to a signifigant rental market. 
+- **Florida dominates rent burden rankings** — 9 of the top 20 most rent-burdened metros in 2023 are in Florida, led by Miami at 41.98% rent-to-income. Likely due to simmilar reasons as Hawaii, many people like to vacation in florida leading to a signifigant rental market. 
 - **Idaho cities drove the largest speculation signals in 2021** — Boise City led with a 28.06pp divergence between price growth (35.9%) and income growth (7.86%), consistent with the pandemic-era migration shock.
 - **Austin, TX** experienced one of the sharpest pandemic run-ups and corrections in the dataset — peaking at ~$563k in mid-2022 before falling back to ~$424k by early 2026.
 - **Chicago** showed remarkable affordability stability across the entire 2015–2024 period, with a price-to-income ratio holding between 3.2x and 3.5x throughout.
